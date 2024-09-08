@@ -43,4 +43,4 @@ class Cassie(LeggedRobot):
     def _reward_no_fly(self):
         contacts = self.contact_forces[:, self.feet_indices, 2] > 0.1
         single_contact = torch.sum(1.*contacts, dim=1)==1
-        return 1.*single_contact
+        return 1.*single_contact # 奖励只有一只脚接触地面的情况

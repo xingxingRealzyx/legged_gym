@@ -128,7 +128,7 @@ class LeggedRobotCfg(BaseConfig):
         max_push_vel_xy = 1.
 
     class rewards:
-        class scales:
+        class scales: # 这里的值都有对应的奖励函数，- 代表要抑制，+ 代表鼓励
             termination = -0.0
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5

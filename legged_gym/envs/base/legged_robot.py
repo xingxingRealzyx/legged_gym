@@ -490,8 +490,8 @@ class LeggedRobot(BaseTask):
         self.gym.refresh_net_contact_force_tensor(self.sim)
 
         # create some wrapper tensors for different slices
-        self.root_states = gymtorch.wrap_tensor(actor_root_state)
-        self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
+        self.root_states = gymtorch.wrap_tensor(actor_root_state) # shape: [actor_nums, 13]， [0:3] 位置坐标x,y,z [3:7] 姿态四元数 [7:10] 线速度 [10:13] 角速度 
+        self.dof_state = gymtorch.wrap_tensor(dof_state_tensor) # 自由度张量，shape: [dof_nums, 2] ，dof位置（角度）和dof速度（角速度）
         self.dof_pos = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 0]
         self.dof_vel = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
         self.base_quat = self.root_states[:, 3:7]
@@ -560,10 +560,10 @@ class LeggedRobot(BaseTask):
                 continue
             self.reward_names.append(name)
             name = '_reward_' + name
-            self.reward_functions.append(getattr(self, name))
+            self.reward_functions.append(getattr(self, name)) # getattr用于获取对象的属性和方法
 
         # reward episode sums
-        self.episode_sums = {name: torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
+        self.episode_sums = {name: torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False) # 不计算梯度
                              for name in self.reward_scales.keys()}
 
     def _create_ground_plane(self):
@@ -815,69 +815,69 @@ class LeggedRobot(BaseTask):
     #------------ reward functions----------------
     def _reward_lin_vel_z(self):
         # Penalize z axis base linear velocity
-        return torch.square(self.base_lin_vel[:, 2])
+        return torch.square(self.base_lin_vel[:, 2]) # 抑制z轴速度
     
     def _reward_ang_vel_xy(self):
         # Penalize xy axes base angular velocity
-        return torch.sum(torch.square(self.base_ang_vel[:, :2]), dim=1)
+        return torch.sum(torch.square(self.base_ang_vel[:, :2]), dim=1) # 抑制xy轴的旋转
     
     def _reward_orientation(self):
         # Penalize non flat base orientation
-        return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
+        return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1) # 抑制重力在xy轴上的分量，也就是尽可能让机器人保持水平
 
     def _reward_base_height(self):
         # Penalize base height away from target
         base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
-        return torch.square(base_height - self.cfg.rewards.base_height_target)
+        return torch.square(base_height - self.cfg.rewards.base_height_target) # 抑制机器人高度与目标高度差
     
     def _reward_torques(self):
         # Penalize torques
-        return torch.sum(torch.square(self.torques), dim=1)
+        return torch.sum(torch.square(self.torques), dim=1) # 抑制扭矩，也就是越小的输出扭矩越好（估计是出于实际的机器人动力考虑）
 
     def _reward_dof_vel(self):
         # Penalize dof velocities
-        return torch.sum(torch.square(self.dof_vel), dim=1)
+        return torch.sum(torch.square(self.dof_vel), dim=1) # 抑制关节速度，速度越慢越好
     
     def _reward_dof_acc(self):
         # Penalize dof accelerations
-        return torch.sum(torch.square((self.last_dof_vel - self.dof_vel) / self.dt), dim=1)
+        return torch.sum(torch.square((self.last_dof_vel - self.dof_vel) / self.dt), dim=1) # 抑制加速度，加速度越慢越好
     
     def _reward_action_rate(self):
         # Penalize changes in actions
-        return torch.sum(torch.square(self.last_actions - self.actions), dim=1)
+        return torch.sum(torch.square(self.last_actions - self.actions), dim=1) # 抑制动作的变化，使机器人更加平稳
     
     def _reward_collision(self):
         # Penalize collisions on selected bodies
-        return torch.sum(1.*(torch.norm(self.contact_forces[:, self.penalised_contact_indices, :], dim=-1) > 0.1), dim=1)
+        return torch.sum(1.*(torch.norm(self.contact_forces[:, self.penalised_contact_indices, :], dim=-1) > 0.1), dim=1) # 抑制所选刚体之间的碰撞
     
     def _reward_termination(self):
         # Terminal reward / penalty
-        return self.reset_buf * ~self.time_out_buf
+        return self.reset_buf * ~self.time_out_buf # 抑制超时
     
     def _reward_dof_pos_limits(self):
         # Penalize dof positions too close to the limit
-        out_of_limits = -(self.dof_pos - self.dof_pos_limits[:, 0]).clip(max=0.) # lower limit
+        out_of_limits = -(self.dof_pos - self.dof_pos_limits[:, 0]).clip(max=0.) # lower limit 
         out_of_limits += (self.dof_pos - self.dof_pos_limits[:, 1]).clip(min=0.)
-        return torch.sum(out_of_limits, dim=1)
+        return torch.sum(out_of_limits, dim=1) # 抑制关节位置靠近极限
 
     def _reward_dof_vel_limits(self):
         # Penalize dof velocities too close to the limit
         # clip to max error = 1 rad/s per joint to avoid huge penalties
-        return torch.sum((torch.abs(self.dof_vel) - self.dof_vel_limits*self.cfg.rewards.soft_dof_vel_limit).clip(min=0., max=1.), dim=1)
+        return torch.sum((torch.abs(self.dof_vel) - self.dof_vel_limits*self.cfg.rewards.soft_dof_vel_limit).clip(min=0., max=1.), dim=1) # 抑制关节速度靠近极限
 
     def _reward_torque_limits(self):
         # penalize torques too close to the limit
-        return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
+        return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1) # 抑制扭矩靠近极限
 
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
-        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma) # 
     
     def _reward_tracking_ang_vel(self):
         # Tracking of angular velocity commands (yaw) 
         ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
-        return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma)
+        return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma) # 负指数函数 ang_vel_error越大结果就越小，用于跟踪commands速度
 
     def _reward_feet_air_time(self):
         # Reward long steps
@@ -890,17 +890,24 @@ class LeggedRobot(BaseTask):
         rew_airTime = torch.sum((self.feet_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
         rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
         self.feet_air_time *= ~contact_filt
-        return rew_airTime
+        return rew_airTime # 奖励离地时间长的步态
     
     def _reward_stumble(self):
         # Penalize feet hitting vertical surfaces
+        # 函数 _reward_stumble 用于检测并惩罚智能体的脚部与垂直表面（如墙壁或其他垂直障碍物）的碰撞。
+        # 这种惩罚机制在强化学习中用于减少智能体在移动过程中不正常的步态行为（如绊倒或撞击障碍），从而促使智能体学会更加自然和有效的步态。
         return torch.any(torch.norm(self.contact_forces[:, self.feet_indices, :2], dim=2) >\
-             5 *torch.abs(self.contact_forces[:, self.feet_indices, 2]), dim=1)
+             5 *torch.abs(self.contact_forces[:, self.feet_indices, 2]), dim=1) 
         
     def _reward_stand_still(self):
         # Penalize motion at zero commands
+        # 函数 _reward_stand_still 用于在没有移动指令的情况下惩罚智能体的多余运动行为。
+        # 具体来说，当速度命令接近零时，该函数通过计算智能体当前关节位置与默认位置之间的差异来决定惩罚值。
+        # 这种惩罚机制用于鼓励智能体在没有运动指令的情况下保持静止，从而避免不必要的动作。
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (torch.norm(self.commands[:, :2], dim=1) < 0.1)
 
     def _reward_feet_contact_forces(self):
         # penalize high contact forces
+        # 函数 _reward_feet_contact_forces 用于惩罚智能体脚部接触力过大的情况。
+        # 这种惩罚机制在强化学习中常用于防止智能体施加过大的力在地面上，从而减少对环境的破坏并提高步态的平滑性和稳定性。
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
