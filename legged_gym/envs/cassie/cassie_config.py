@@ -33,8 +33,8 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class CassieRoughCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
-        num_observations = 169
-        num_actions = 12 # 12个动作（12个关节）
+        num_observations = 169 # 表示控制网络输入169个量
+        num_actions = 12 # 12个动作（控制12个关节）
 
     
     class terrain( LeggedRobotCfg.terrain):
@@ -44,19 +44,19 @@ class CassieRoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 1.] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'hip_abduction_left': 0.1,
-            'hip_rotation_left': 0.,
-            'hip_flexion_left': 1.,
-            'thigh_joint_left': -1.8,
-            'ankle_joint_left': 1.57,
-            'toe_joint_left': -1.57,
+            'hip_abduction_left': 0.1, # 左髋外展关节
+            'hip_rotation_left': 0., # 左髋旋转关节
+            'hip_flexion_left': 1., # 左髋弯曲关节
+            'thigh_joint_left': -1.8, # 左大腿关节
+            'ankle_joint_left': 1.57, # 左踝关节
+            'toe_joint_left': -1.57, # 左脚趾
 
-            'hip_abduction_right': -0.1,
-            'hip_rotation_right': 0.,
-            'hip_flexion_right': 1.,
-            'thigh_joint_right': -1.8,
-            'ankle_joint_right': 1.57,
-            'toe_joint_right': -1.57
+            'hip_abduction_right': -0.1, # 右髋外展关节
+            'hip_rotation_right': 0., # 右髋旋转关节
+            'hip_flexion_right': 1., # 右髋弯曲关节
+            'thigh_joint_right': -1.8, # 右大腿关节
+            'ankle_joint_right': 1.57, # 右踝关节
+            'toe_joint_right': -1.57 # 右脚趾
         }
 
     class control( LeggedRobotCfg.control ):
@@ -76,9 +76,9 @@ class CassieRoughCfg( LeggedRobotCfg ):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/cassie/urdf/cassie.urdf'
         name = "cassie"
         foot_name = 'toe'
-        terminate_after_contacts_on = ['pelvis']
+        terminate_after_contacts_on = ['pelvis'] # 骨盆，表示在骨盆接触时终止
         flip_visual_attachments = False
-        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter # 关闭自我碰撞
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.95
