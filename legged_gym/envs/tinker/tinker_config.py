@@ -2,51 +2,49 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class TinkerRoughCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
-        num_envs = 4096
-        num_observations = 169
-        num_actions = 12 # 12个动作（12个关节）
+        num_envs = 1024 
+        num_observations = 39
+        num_actions = 10
 
     class terrain( LeggedRobotCfg.terrain):
-        measured_points_x = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5] # 1mx1m rectangle (without center line)
-        measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
-
+        # measured_points_x = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5] # 1mx1m rectangle (without center line)
+        # measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
+        mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
+        measure_heights = False
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 1.] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'hip_abduction_left': 0.1,
-            'hip_rotation_left': 0.,
-            'hip_flexion_left': 1.,
-            'thigh_joint_left': -1.8,
-            'ankle_joint_left': 1.57,
-            'toe_joint_left': -1.57,
+            'joint_l_yaw': 0., 
+            'joint_l_roll': 0., 
+            'joint_l_pitch': 0., 
+            'joint_l_knee': 0., 
+            'joint_l_ankle':0., 
 
-            'hip_abduction_right': -0.1,
-            'hip_rotation_right': 0.,
-            'hip_flexion_right': 1.,
-            'thigh_joint_right': -1.8,
-            'ankle_joint_right': 1.57,
-            'toe_joint_right': -1.57
+            'joint_r_yaw': 0.,
+            'joint_r_roll': 0., 
+            'joint_r_pitch': 0., 
+            'joint_r_knee': 0., 
+            'joint_r_ankle': 0.
         }
+        
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        stiffness = {   'hip_abduction': 100.0, 'hip_rotation': 100.0,
-                        'hip_flexion': 200., 'thigh_joint': 200., 'ankle_joint': 200.,
-                        'toe_joint': 40.}  # [N*m/rad]
-        damping = { 'hip_abduction': 3.0, 'hip_rotation': 3.0,
-                    'hip_flexion': 6., 'thigh_joint': 6., 'ankle_joint': 6.,
-                    'toe_joint': 1.}  # [N*m*s/rad]     # [N*m*s/rad]
+        stiffness = {   'yaw': 100.0, 'roll': 100.0, 'pitch': 100.0, 
+                        'knee': 200., 'ankle': 40.}  # [N*m/rad]
+        damping = { 'yaw': 3.0, 'roll': 3.0, 'pitch' : 3.0,
+                    'knee': 6., 'ankle': 6 }  # [N*m*s/rad]     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
-
+        
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/cassie/urdf/cassie.urdf'
-        name = "cassie"
-        foot_name = 'toe'
-        terminate_after_contacts_on = ['pelvis']
-        flip_visual_attachments = False
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/tinker/urdf/tinker_urdf.urdf'
+        name = "tinker"
+        # foot_name = 'foot'
+        # terminate_after_contacts_on = ['pelvis']
+        # flip_visual_attachments = False
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
 
     class rewards( LeggedRobotCfg.rewards ):
