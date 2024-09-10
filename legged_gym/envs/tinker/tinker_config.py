@@ -44,7 +44,7 @@ class TinkerRoughCfg( LeggedRobotCfg ):
         name = "tinker"
         # foot_name = 'foot'
         # terminate_after_contacts_on = ['pelvis']
-        # flip_visual_attachments = False
+        flip_visual_attachments = False # 模型显示不正确可能是因为这个
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
 
     class rewards( LeggedRobotCfg.rewards ):
