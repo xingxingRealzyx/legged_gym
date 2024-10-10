@@ -22,6 +22,12 @@ class Tinker(LeggedRobot):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         self.base_euler_xyz = get_euler_xyz_tensor(self.base_quat)
         self.ref_dof_pos = torch.zeros_like(self.dof_pos)  # 步态生成器-生成的参考姿势
+        for i in range(self.num_envs):
+            self.ref_dof_pos[i] = self.default_dof_pos
+        print("------------------------------------------------")
+        print(self.ref_dof_pos[0])
+        print("------------------------------------------------")
+
     def compute_observations(self):
         """ Computes observations
 

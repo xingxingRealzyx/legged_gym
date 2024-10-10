@@ -13,25 +13,25 @@ class TinkerRoughCfg( LeggedRobotCfg ):
         mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
         measure_heights = False # 测量高度
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.5] # x,y,z [m]
+        pos = [0.0, 0.0, 0.36] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'joint_l_yaw': 0., 
             'joint_l_roll': 0., 
-            'joint_l_pitch': 0., 
-            'joint_l_knee': 0., 
-            'joint_l_ankle':0., 
+            'joint_l_pitch': 0.5, 
+            'joint_l_knee': -0.5, 
+            'joint_l_ankle': 0.5, 
 
             'joint_r_yaw': 0.,
             'joint_r_roll': 0., 
-            'joint_r_pitch': 0., 
-            'joint_r_knee': 0., 
-            'joint_r_ankle': 0.
+            'joint_r_pitch': 0.5, 
+            'joint_r_knee': -0.5, 
+            'joint_r_ankle': 0.5
         }
         
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        stiffness = { 'joint': 100.0 }  # [N*m/rad]
+        stiffness = { 'joint': 50.0 }  # [N*m/rad]
         damping = { 'joint': 3.0 }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.1
@@ -69,8 +69,8 @@ class TinkerRoughCfg( LeggedRobotCfg ):
         foot_name = 'foot' # 脚的刚体的名字
         # terminate_after_contacts_on = ['pelvis']
         flip_visual_attachments = False # 模型显示不正确可能是因为这个
-        self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
-        terminate_body_height = 0.4
+        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+        terminate_body_height = 0.2
 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.95
@@ -82,10 +82,18 @@ class TinkerRoughCfg( LeggedRobotCfg ):
         max_dist = 0.5 # 两只脚的最大距离
         class scales( LeggedRobotCfg.rewards.scales ):
             termination = -5.
-            target_joint_pos_r = 10.0  # 3.  reference joint imitation reward
-            target_joint_pos_l = 10.0
+            tracking_lin_vel = 0.
+            tracking_lin_x_vel = 10.0  # 6. 奖励速度为0
+            tracking_lin_y_vel = 10.0  # 6. 奖励速度为0
+            
             orientation = 10.0  # 
-            feet_distance = 1.0
+
+            feet_contact_forces = -0.01
+
+            target_joint_pos_r = 2.0  # 3.  reference joint imitation reward
+            target_joint_pos_l = 2.0
+
+            # feet_distance = 1.0
 
 class TinkerRoughCfgPPO( LeggedRobotCfgPPO ):
     init_noise_std = 0.12
